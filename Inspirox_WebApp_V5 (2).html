@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Inspirox — Business Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --red:#C8402A; --blue:#3B7FC4; --green:#5A9E2F; --yellow:#F0A500;
+  --bg:#06060A; --s1:rgba(255,255,255,0.03); --s2:rgba(255,255,255,0.06);
+  --brd:rgba(255,255,255,0.08); --brd2:rgba(255,255,255,0.14);
+  --text:#F0F0F6; --muted:#7A7A9A; --r:16px; --rs:10px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;position:relative}
+
+/* ── BG MESH ── */
+body::before{content:'';position:fixed;inset:0;background:
+  radial-gradient(ellipse 700px 500px at 10% 20%,rgba(200,64,42,.13) 0%,transparent 70%),
+  radial-gradient(ellipse 600px 600px at 85% 10%,rgba(59,127,196,.11) 0%,transparent 70%),
+  radial-gradient(ellipse 800px 400px at 90% 80%,rgba(90,158,47,.09) 0%,transparent 70%),
+  radial-gradient(ellipse 500px 700px at 15% 90%,rgba(240,165,0,.09) 0%,transparent 70%);
+  pointer-events:none;z-index:0;animation:meshDrift 22s ease-in-out infinite alternate}
+@keyframes meshDrift{0%{filter:hue-rotate(0deg) brightness(1)}100%{filter:hue-rotate(10deg) brightness(1.06)}}
+
+/* grain */
+body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.022'/%3E%3C/svg%3E");pointer-events:none;z-index:1}
+
+.app{position:relative;z-index:2;min-height:100vh;display:flex;flex-direction:column}
+
+/* ── CURSOR ── */
+#cur{width:8px;height:8px;background:var(--red);border-radius:50%;position:fixed;pointer-events:none;z-index:9999;transition:transform .1s;mix-blend-mode:normal}
+#cur-ring{width:32px;height:32px;border:1.5px solid rgba(200,64,42,.5);border-radius:50%;position:fixed;pointer-events:none;z-index:9998;transition:all .15s ease;transform:translate(-50%,-50%)}
+
+/* ── HEADER ── */
+header{display:flex;align-items:center;justify-content:space-between;padding:20px 48px;border-bottom:1px solid var(--brd);backdrop-filter:blur(24px);background:rgba(6,6,10,.7);position:sticky;top:0;z-index:100;animation:slideDown .6s ease both}
+@keyframes slideDown{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
+.hdr-left{display:flex;align-items:center;gap:18px}
+.hdr-sep{width:1px;height:32px;background:linear-gradient(to bottom,transparent,rgba(255,255,255,.2),transparent)}
+.hdr-brand{display:flex;flex-direction:column;gap:2px}
+.hdr-name{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;letter-spacing:.06em;background:linear-gradient(90deg,#C8402A,#F0A500,#3B7FC4,#5A9E2F);background-size:300% 100%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:gradShift 6s linear infinite}
+@keyframes gradShift{0%{background-position:0%}100%{background-position:300%}}
+.hdr-sub{font-size:10px;letter-spacing:.22em;color:var(--muted);text-transform:uppercase}
+.status-pill{display:flex;align-items:center;gap:8px;padding:8px 18px;background:rgba(90,158,47,.1);border:1px solid rgba(90,158,47,.3);border-radius:100px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#5A9E2F;letter-spacing:.08em}
+.status-dot{width:6px;height:6px;background:#5A9E2F;border-radius:50%;box-shadow:0 0 8px #5A9E2F;animation:blink 2s ease infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ── HERO ── */
+.hero{padding:64px 48px 48px;text-align:center;animation:fadeUp .8s .2s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+.hero-pill{display:inline-flex;align-items:center;gap:10px;padding:7px 20px;background:linear-gradient(135deg,rgba(200,64,42,.1),rgba(59,127,196,.1));border:1px solid rgba(255,255,255,.1);border-radius:100px;font-size:11px;letter-spacing:.25em;color:var(--muted);text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:24px}
+.hero-dots{display:flex;gap:5px}
+.hero-dots span{width:6px;height:6px;border-radius:50%}
+.hero-dots span:nth-child(1){background:#C8402A}
+.hero-dots span:nth-child(2){background:#F0A500}
+.hero-dots span:nth-child(3){background:#3B7FC4}
+.hero-dots span:nth-child(4){background:#5A9E2F}
+.hero h1{font-family:'Syne',sans-serif;font-size:clamp(44px,6vw,84px);font-weight:800;line-height:1;letter-spacing:-.03em;margin-bottom:0}
+.hw1{color:#C8402A}.hw2{color:#F0F0F6;font-weight:300;font-style:italic;font-family:'DM Sans',sans-serif}.hw3{color:#F0A500}.hw4{color:#3B7FC4}
+
+/* ── ACCENT LINE ── */
+.accent-strip{height:3px;background:linear-gradient(90deg,#C8402A 0%,#F0A500 33%,#3B7FC4 66%,#5A9E2F 100%);margin:0 48px;border-radius:100px;opacity:.55}
+
+/* ── MAIN ── */
+.main{padding:44px 48px 80px;max-width:1080px;margin:0 auto;width:100%}
+
+/* ── GLASS CARD ── */
+.glass-card{background:rgba(255,255,255,.035);backdrop-filter:blur(20px);border:1px solid var(--brd2);border-radius:24px;padding:40px;position:relative;overflow:hidden;box-shadow:0 40px 80px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.04) inset;animation:fadeUp .8s .4s ease both}
+.glass-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#C8402A,#F0A500,#3B7FC4,#5A9E2F);border-radius:24px 24px 0 0}
+
+/* ── SEC LABEL ── */
+.sec-label{display:flex;align-items:center;gap:14px;margin-bottom:28px}
+.sec-label-text{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.3em;text-transform:uppercase;background:linear-gradient(90deg,#C8402A,#F0A500);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.sec-label-line{flex:1;height:1px;background:linear-gradient(90deg,rgba(255,255,255,.12),transparent)}
+
+/* ── FORM ── */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
+.fg-full{grid-column:1/-1}
+.field{display:flex;flex-direction:column;gap:8px}
+.field-label{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);font-family:'JetBrains Mono',monospace}
+
+/* ── COMBO INPUT ── */
+.combo-wrap{position:relative}
+.combo-input{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--brd2);border-radius:var(--rs);padding:14px 44px 14px 16px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:all .25s}
+.combo-input::placeholder{color:rgba(240,240,246,.25)}
+.combo-input:focus{border-color:rgba(200,64,42,.6);background:rgba(200,64,42,.06);box-shadow:0 0 0 3px rgba(200,64,42,.1)}
+.combo-arrow{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--muted);cursor:pointer;pointer-events:all;transition:transform .2s;font-size:13px;opacity:.6}
+
+/* ── SELECT ── */
+.styled-select{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--brd2);border-radius:var(--rs);padding:14px 40px 14px 16px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:all .25s;appearance:none;-webkit-appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23F0A500' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
+.styled-select:focus{border-color:rgba(59,127,196,.6);background-color:rgba(59,127,196,.06);box-shadow:0 0 0 3px rgba(59,127,196,.1)}
+.styled-select option{background:#111118;color:#F0F0F6}
+
+/* ── DROPDOWN ── */
+.dropdown-list{display:none;position:absolute;top:calc(100% + 8px);left:0;right:0;background:rgba(12,12,20,.97);backdrop-filter:blur(20px);border:1px solid var(--brd2);border-radius:var(--rs);max-height:300px;overflow-y:auto;z-index:500;box-shadow:0 24px 64px rgba(0,0,0,.8)}
+.dropdown-list.open{display:block;animation:dropIn .2s ease}
+@keyframes dropIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.dropdown-list::-webkit-scrollbar{width:3px}
+.dropdown-list::-webkit-scrollbar-thumb{background:rgba(200,64,42,.4);border-radius:100px}
+.dl-search{width:100%;background:rgba(255,255,255,.04);border:none;border-bottom:1px solid var(--brd);padding:12px 16px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;position:sticky;top:0;backdrop-filter:blur(20px)}
+.dl-search::placeholder{color:rgba(240,240,246,.25);font-size:12px}
+.dl-group-label{padding:10px 16px 4px;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.25em;text-transform:uppercase;position:sticky;top:41px;backdrop-filter:blur(12px);background:rgba(12,12,20,.9)}
+.dl-group-label:nth-child(4n+1){color:#C8402A}.dl-group-label:nth-child(4n+2){color:#F0A500}.dl-group-label:nth-child(4n+3){color:#3B7FC4}.dl-group-label:nth-child(4n+4){color:#5A9E2F}
+.dl-option{padding:10px 16px;font-size:13px;color:rgba(240,240,246,.75);cursor:pointer;display:flex;align-items:center;gap:10px;transition:all .15s}
+.dl-option:hover{background:rgba(255,255,255,.05);color:var(--text)}
+.dl-icon{font-size:14px;width:20px;text-align:center;flex-shrink:0}
+
+/* ── TAGS ── */
+.tags-wrap{background:rgba(255,255,255,.04);border:1px solid var(--brd2);border-radius:var(--rs);padding:10px 14px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;min-height:50px;cursor:text;transition:all .25s}
+.tags-wrap:focus-within{border-color:rgba(90,158,47,.6);background:rgba(90,158,47,.05);box-shadow:0 0 0 3px rgba(90,158,47,.08)}
+.tag{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:100px;font-size:12px;font-family:'JetBrains Mono',monospace;border:1px solid;transition:all .2s}
+.tag:nth-child(4n+1){background:rgba(200,64,42,.12);border-color:rgba(200,64,42,.4);color:#E8725F}
+.tag:nth-child(4n+2){background:rgba(240,165,0,.12);border-color:rgba(240,165,0,.4);color:#F0A500}
+.tag:nth-child(4n+3){background:rgba(59,127,196,.12);border-color:rgba(59,127,196,.4);color:#5FA0E0}
+.tag:nth-child(4n+4){background:rgba(90,158,47,.12);border-color:rgba(90,158,47,.4);color:#7BC453}
+.tag-x{cursor:pointer;opacity:.6;transition:opacity .2s}.tag-x:hover{opacity:1}
+.tag-input{background:transparent;border:none;outline:none;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;min-width:120px;flex:1}
+.tag-input::placeholder{color:rgba(240,240,246,.2);font-size:12px}
+
+/* ── TOGGLE ── */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;background:rgba(255,255,255,.025);border:1px solid var(--brd);border-radius:var(--rs);transition:border-color .2s}
+.toggle-row:hover{border-color:var(--brd2)}
+.toggle-info{display:flex;flex-direction:column;gap:3px}
+.toggle-name{font-size:14px;color:var(--text)}
+.toggle-desc{font-size:11px;color:var(--muted)}
+.tog{width:46px;height:26px;background:rgba(255,255,255,.1);border-radius:100px;position:relative;cursor:pointer;transition:background .3s}
+.tog.on{background:linear-gradient(90deg,#F0A500,#C8402A)}
+.tog::after{content:'';position:absolute;width:18px;height:18px;background:#fff;border-radius:50%;top:4px;left:4px;transition:transform .3s;box-shadow:0 2px 6px rgba(0,0,0,.4)}
+.tog.on::after{transform:translateX(20px)}
+
+/* ── LAUNCH BTN ── */
+.btn-launch{width:100%;padding:18px;background:linear-gradient(135deg,#C8402A,#F0A500);border:none;border-radius:100px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#fff;cursor:pointer;transition:all .3s;position:relative;overflow:hidden;margin-top:8px;box-shadow:0 8px 32px rgba(200,64,42,.4)}
+.btn-launch:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 16px 48px rgba(200,64,42,.55)}
+.btn-launch:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn-launch::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.15),transparent);pointer-events:none}
+
+/* ── ERROR ── */
+.err-box{display:none;margin-top:12px;padding:12px 18px;background:rgba(200,64,42,.1);border:1px solid rgba(200,64,42,.3);border-radius:var(--rs);font-size:13px;color:#E8725F;font-family:'JetBrains Mono',monospace}
+.err-box.show{display:block;animation:fadeUp .3s ease}
+
+/* ── PROGRESS ── */
+.prog-wrap{display:none;margin-top:28px;padding:28px;background:rgba(255,255,255,.02);border:1px solid var(--brd);border-radius:20px}
+.prog-wrap.show{display:block;animation:fadeUp .4s ease}
+.prog-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.prog-label{font-size:13px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+.prog-pct{font-family:'JetBrains Mono',monospace;font-size:13px;color:#F0A500}
+.prog-track{height:4px;background:rgba(255,255,255,.06);border-radius:100px;overflow:hidden;margin-bottom:20px}
+.prog-bar{height:100%;width:0%;background:linear-gradient(90deg,#C8402A,#F0A500,#3B7FC4);border-radius:100px;transition:width .6s ease}
+.prog-steps{display:flex;justify-content:space-between;gap:4px}
+.step{flex:1;text-align:center;font-size:9px;font-family:'JetBrains Mono',monospace;color:var(--muted);padding:8px 4px;border-radius:6px;border:1px solid var(--brd);transition:all .4s;letter-spacing:.05em}
+.step.active{color:#F0A500;border-color:rgba(240,165,0,.4);background:rgba(240,165,0,.06)}
+.step.done{color:#5A9E2F;border-color:rgba(90,158,47,.3);background:rgba(90,158,47,.06)}
+
+
+
+/* ── SUCCESS SECTION ── */
+.result-section{display:none;margin-top:28px}
+.result-section.show{display:block;animation:fadeUp .6s ease}
+.result-card{background:rgba(255,255,255,.025);backdrop-filter:blur(20px);border:1px solid var(--brd2);border-radius:24px;padding:36px;position:relative;overflow:hidden;box-shadow:0 40px 80px rgba(0,0,0,.5)}
+.result-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#C8402A,#F0A500,#3B7FC4,#5A9E2F);border-radius:24px 24px 0 0}
+
+/* ── FOOTER ── */
+footer{text-align:center;padding:32px 48px;border-top:1px solid var(--brd);margin-top:auto}
+.ft-powered{display:flex;align-items:center;justify-content:center;gap:10px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.1em;color:var(--muted)}
+.ft-powered strong{font-weight:500}
+.fw-r{color:#C8402A}.fw-b{color:#3B7FC4}.fw-g{color:#5A9E2F}
+.ft-dot{width:3px;height:3px;border-radius:50%;background:var(--muted);opacity:.4}
+.ft-copy{margin-top:8px;font-size:11px;color:rgba(122,122,154,.4);letter-spacing:.05em}
+
+@media(max-width:768px){
+  header{padding:14px 20px}
+  .hero{padding:44px 20px 36px}
+  .main{padding:20px 20px 60px}
+  .glass-card{padding:24px 20px}
+  .form-grid{grid-template-columns:1fr}
+  .stats-row{grid-template-columns:repeat(2,1fr)}
+  .stat-num{font-size:40px}
+  .accent-strip{margin:0 20px}
+  .prog-steps{display:none}
+}
+</style>
+</head>
+<body>
+
+<div id="cur"></div>
+<div id="cur-ring"></div>
+
+<div class="app">
+
+<header>
+  <div class="hdr-left">
+    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="32" height="32" rx="8" fill="rgba(200,64,42,0.15)"/>
+      <path d="M8 24L16 8L24 24" stroke="#C8402A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M10.5 19H21.5" stroke="#F0A500" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+    <div class="hdr-sep"></div>
+    <div class="hdr-brand">
+      <div class="hdr-name">INSPIROX</div>
+      <div class="hdr-sub">Business Intelligence</div>
+    </div>
+  </div>
+  <div class="status-pill">
+    <span class="status-dot"></span>
+    AGENT READY
+  </div>
+</header>
+
+<div class="hero">
+  <div class="hero-pill">
+    <div class="hero-dots">
+      <span></span><span></span><span></span><span></span>
+    </div>
+    AI Powered · Lead Discovery · Real-Time
+  </div>
+  <h1>
+    <span class="hw1">Discover</span>
+    <span class="hw2"> your </span>
+    <span class="hw3">Next</span><br/>
+    <span class="hw4">Business Lead</span>
+  </h1>
+</div>
+
+<div class="accent-strip"></div>
+
+<div class="main">
+
+  <div class="glass-card">
+    <div class="sec-label">
+      <span class="sec-label-text">Search Parameters</span>
+      <div class="sec-label-line"></div>
+    </div>
+
+    <div class="form-grid">
+
+      <!-- Business Category -->
+      <div class="field">
+        <div class="field-label">Business Category</div>
+        <div class="combo-wrap" id="catWrap">
+          <input class="combo-input" id="catDisplay" placeholder="Type freely, e.g. Marketing Agency…" autocomplete="off"/>
+          <span class="combo-arrow" id="catArrow" onclick="toggleCatDrop()" title="Browse categories">▾</span>
+          <div class="dropdown-list" id="catList">
+            <input class="dl-search" id="catSearch" placeholder="Search categories…"/>
+            <div id="catOptions"></div>
+          </div>
+          <input type="hidden" id="keyword"/>
+        </div>
+      </div>
+
+      <!-- Location -->
+      <div class="field">
+        <div class="field-label">Location / City</div>
+        <div class="combo-wrap" id="locWrap">
+          <input class="combo-input" id="locDisplay" placeholder="Select a location…" autocomplete="off" readonly style="cursor:pointer"/>
+          <span class="combo-arrow">▾</span>
+          <div class="dropdown-list" id="locList">
+            <input class="dl-search" id="locSearch" placeholder="Search any city, state or country…"/>
+            <div id="locOptions"></div>
+          </div>
+          <input type="hidden" id="location"/>
+        </div>
+      </div>
+
+      <!-- Max Results -->
+      <div class="field">
+        <div class="field-label">Max Results</div>
+        <select class="styled-select" id="maxResults">
+          <option value="5">5 Results</option>
+          <option value="10" selected>10 Results</option>
+          <option value="20">20 Results</option>
+          <option value="30">30 Results</option>
+          <option value="50">50 Results</option>
+        </select>
+      </div>
+
+      <!-- Company Size -->
+      <div class="field">
+        <div class="field-label">Company Size Filter</div>
+        <select class="styled-select" id="companySize">
+          <option value="any">Any Size</option>
+          <option value="small">Small (1–50)</option>
+          <option value="medium">Medium (51–200)</option>
+          <option value="large">Large (200+)</option>
+        </select>
+      </div>
+
+      <!-- Target Designations -->
+      <div class="field fg-full">
+        <div class="field-label">Target Designations <span style="color:var(--muted);font-size:9px;margin-left:8px">PRESS ENTER TO ADD</span></div>
+        <div class="tags-wrap" id="tagsWrap">
+          <input class="tag-input" id="tagInput" placeholder="Add designation…"/>
+        </div>
+      </div>
+
+      <!-- Toggle -->
+      <div class="fg-full">
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div class="toggle-name">BizDev Contact Discovery</div>
+            <div class="toggle-desc">Also find Sales / BD contacts at each company</div>
+          </div>
+          <div class="tog on" id="bdTog"></div>
+        </div>
+      </div>
+
+    </div><!-- /form-grid -->
+
+    <button class="btn-launch" id="scanBtn">
+      Launch Intelligence Scan ⚡
+    </button>
+    <div class="err-box" id="errBox"></div>
+
+    <!-- Progress -->
+    <div class="prog-wrap" id="progWrap">
+      <div class="prog-header">
+        <span class="prog-label" id="progLabel">Initialising…</span>
+        <span class="prog-pct" id="progPct">0%</span>
+      </div>
+      <div class="prog-track"><div class="prog-bar" id="progBar"></div></div>
+      <div class="prog-steps">
+        <div class="step" id="s1">Maps Scraping</div>
+        <div class="step" id="s2">Owner Discovery</div>
+        <div class="step" id="s3">LinkedIn Match</div>
+        <div class="step" id="s4">BizDev Scan</div>
+        <div class="step" id="s5">Enrichment</div>
+        <div class="step" id="s6">Saving Sheet</div>
+      </div>
+    </div>
+
+  </div><!-- /glass-card -->
+
+  <!-- Result -->
+  <div class="result-section" id="resultSection">
+    <div class="result-card">
+      <div id="resultInner"></div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<footer>
+  <div class="ft-powered">
+    <span>Powered &amp; Developed by</span>
+    <div class="ft-dot"></div>
+    <strong class="fw-r">@Auro</strong><strong class="fw-b">edge</strong>
+    <div class="ft-dot"></div>
+    <strong class="fw-g">Satya Prakash</strong>
+  </div>
+  <div class="ft-copy">© 2025 Inspirox · Business Intelligence Suite · All rights reserved</div>
+</footer>
+
+</div><!-- /app -->
+
+<script>
+// ── CURSOR ───────────────────────────────────────
+const cur=document.getElementById('cur'),ring=document.getElementById('cur-ring');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cur.style.transform=`translate(${mx-4}px,${my-4}px)`});
+(function animRing(){rx+=(mx-rx)*.12;ry+=(my-ry)*.12;ring.style.transform=`translate(${rx-16}px,${ry-16}px)`;requestAnimationFrame(animRing)})();
+
+// ── CATEGORIES ───────────────────────────────────
+const CATS=[
+  {g:'🏥 Healthcare & Wellness',items:[{i:'🏥',l:'Hospitals & Clinics'},{i:'💊',l:'Pharmacies & Chemists'},{i:'🦷',l:'Dental Clinics'},{i:'👁️',l:'Eye Care & Opticians'},{i:'🧘',l:'Yoga & Wellness Centers'},{i:'💆',l:'Spas & Massage Parlors'},{i:'🏃',l:'Gyms & Fitness Centers'},{i:'🧬',l:'Diagnostic Labs'},{i:'🩺',l:'Physiotherapy Centers'},{i:'🌿',l:'Ayurveda & Naturopathy'}]},
+  {g:'🍽️ Food & Hospitality',items:[{i:'🍽️',l:'Restaurants'},{i:'☕',l:'Cafes & Coffee Shops'},{i:'🍕',l:'Fast Food & QSR'},{i:'🍱',l:'Cloud Kitchens'},{i:'🎂',l:'Bakeries & Patisseries'},{i:'🏨',l:'Hotels & Resorts'},{i:'🏕️',l:'Homestays & Guesthouses'},{i:'🚗',l:'Catering Services'},{i:'🍵',l:'Tea & Chai Shops'}]},
+  {g:'🎓 Education & Training',items:[{i:'🎓',l:'Schools & Colleges'},{i:'📚',l:'Coaching Centers & Tuitions'},{i:'💻',l:'IT Training Institutes'},{i:'🎨',l:'Art & Design Schools'},{i:'🎵',l:'Music & Dance Academies'},{i:'🗣️',l:'Language Institutes'},{i:'📊',l:'MBA & Management Institutes'},{i:'👶',l:'Preschools & Playschools'},{i:'🏋️',l:'Sports Academies'}]},
+  {g:'🏢 Professional Services',items:[{i:'⚖️',l:'Law Firms & Legal Services'},{i:'📊',l:'CA & Accounting Firms'},{i:'💡',l:'Management Consultants'},{i:'🖥️',l:'IT Companies & Software Firms'},{i:'📣',l:'Marketing Agencies'},{i:'🎬',l:'Media & PR Agencies'},{i:'🔐',l:'Cybersecurity Firms'},{i:'📱',l:'Mobile App Developers'},{i:'🌐',l:'Web Design Agencies'},{i:'🤖',l:'AI & Automation Companies'}]},
+  {g:'🏗️ Construction & Real Estate',items:[{i:'🏗️',l:'Builders & Developers'},{i:'🏠',l:'Real Estate Agents'},{i:'🔧',l:'Architecture Firms'},{i:'🪟',l:'Interior Designers'},{i:'🪚',l:'Contractors & Civil Works'},{i:'🛋️',l:'Furniture & Decor Showrooms'}]},
+  {g:'🛒 Retail & Commerce',items:[{i:'👗',l:'Fashion & Clothing Stores'},{i:'💍',l:'Jewellery Showrooms'},{i:'📱',l:'Electronics Stores'},{i:'🛒',l:'Supermarkets & Grocery'},{i:'🧴',l:'Beauty & Cosmetics Shops'},{i:'📚',l:'Bookstores'},{i:'🎁',l:'Gift Shops'},{i:'🥾',l:'Footwear Stores'}]},
+  {g:'🚗 Automotive',items:[{i:'🚗',l:'Car Dealerships'},{i:'🔧',l:'Auto Repair & Garages'},{i:'🛵',l:'Bike & Scooter Dealers'},{i:'🚕',l:'Cab & Taxi Services'},{i:'🚛',l:'Logistics & Transport'},{i:'⛽',l:'Petrol Stations'}]},
+  {g:'💰 Finance & Insurance',items:[{i:'🏦',l:'Banks & NBFCs'},{i:'📈',l:'Investment & Wealth Firms'},{i:'🛡️',l:'Insurance Agencies'},{i:'💳',l:'Fintech Companies'},{i:'📊',l:'Stock Brokers'},{i:'🏠',l:'Loan & Mortgage Brokers'}]},
+  {g:'💇 Beauty & Personal Care',items:[{i:'💇',l:'Hair Salons & Barbers'},{i:'💅',l:'Nail Studios'},{i:'🧖',l:'Skin Care Clinics'},{i:'💄',l:'Makeup Artists'},{i:'🧴',l:'Beauty Parlors'},{i:'🐾',l:'Pet Grooming Services'}]},
+  {g:'🌍 Travel & Events',items:[{i:'✈️',l:'Travel Agencies'},{i:'🗺️',l:'Tour Operators'},{i:'🎡',l:'Event Management Companies'},{i:'📸',l:'Photography Studios'},{i:'🎤',l:'Wedding Planners'},{i:'🎭',l:'Entertainment Companies'}]},
+  {g:'🏭 Manufacturing & Industry',items:[{i:'🏭',l:'Manufacturing Companies'},{i:'🔩',l:'Engineering Firms'},{i:'⚡',l:'Electrical & Electronics Mfg'},{i:'🧪',l:'Chemical Companies'},{i:'🧵',l:'Textile & Garment Factories'},{i:'🍶',l:'FMCG Companies'},{i:'♻️',l:'Waste Management & Recycling'}]},
+  {g:'🖥️ Technology & SaaS',items:[{i:'🖥️',l:'SaaS Companies'},{i:'☁️',l:'Cloud Service Providers'},{i:'🔒',l:'Data & Analytics Firms'},{i:'🎮',l:'Gaming Companies'},{i:'📡',l:'Telecom & ISP Companies'},{i:'🤝',l:'IT Staffing Companies'}]},
+  {g:'🧹 Home Services',items:[{i:'🧹',l:'Cleaning & Housekeeping'},{i:'🔌',l:'Electricians & Plumbers'},{i:'❄️',l:'AC & Appliance Repair'},{i:'🪴',l:'Landscaping & Gardening'},{i:'🐾',l:'Pet Care & Vet Services'}]},
+  {g:'🌱 Agriculture',items:[{i:'🌱',l:'Agri & Farming Companies'},{i:'🥛',l:'Dairy & Food Processing'},{i:'🌾',l:'Seed & Fertilizer Companies'},{i:'🐟',l:'Fisheries & Aquaculture'}]},
+  {g:'📦 Logistics & Supply Chain',items:[{i:'📦',l:'Courier & Delivery Services'},{i:'🚢',l:'Shipping & Freight Companies'},{i:'🏪',l:'Warehousing & Storage'},{i:'🔗',l:'Supply Chain Consultants'}]},
+];
+
+// ── LOCATIONS ─────────────────────────────────────
+const LOCS=[
+  {g:'🇮🇳 India — Metro',items:['Mumbai','Delhi','Bengaluru','Hyderabad','Chennai','Kolkata','Pune','Ahmedabad','Surat','Jaipur']},
+  {g:'🇮🇳 India — North',items:['Lucknow','Kanpur','Agra','Varanasi','Noida','Gurugram','Ghaziabad','Amritsar','Ludhiana','Chandigarh','Dehradun','Srinagar']},
+  {g:'🇮🇳 India — South',items:['Coimbatore','Madurai','Vijayawada','Visakhapatnam','Kochi','Thiruvananthapuram','Mysuru','Mangaluru']},
+  {g:'🇮🇳 India — East & Central',items:['Bhubaneswar','Cuttack','Ranchi','Patna','Nagpur','Indore','Bhopal','Raipur','Guwahati']},
+  {g:'🇮🇳 India — West',items:['Vadodara','Rajkot','Nashik','Aurangabad','Thane','Navi Mumbai','Pimpri-Chinchwad','Jodhpur','Udaipur']},
+  {g:'🇮🇳 India — States',items:['Maharashtra','Karnataka','Tamil Nadu','Uttar Pradesh','West Bengal','Gujarat','Rajasthan','Andhra Pradesh','Telangana','Kerala','Bihar','Madhya Pradesh','Odisha','Punjab','Haryana','Delhi NCR','Goa']},
+  {g:'🇺🇸 USA — Northeast',items:['New York, NY','Boston, MA','Philadelphia, PA','Washington DC','Baltimore, MD','Pittsburgh, PA']},
+  {g:'🇺🇸 USA — South',items:['Houston, TX','Dallas, TX','Austin, TX','San Antonio, TX','Miami, FL','Orlando, FL','Atlanta, GA','Charlotte, NC','Nashville, TN']},
+  {g:'🇺🇸 USA — Midwest',items:['Chicago, IL','Detroit, MI','Minneapolis, MN','Cleveland, OH','Columbus, OH','Indianapolis, IN']},
+  {g:'🇺🇸 USA — West',items:['Los Angeles, CA','San Francisco, CA','San Diego, CA','Seattle, WA','Portland, OR','Phoenix, AZ','Denver, CO','Las Vegas, NV']},
+  {g:'🇬🇧 United Kingdom',items:['London','Manchester','Birmingham','Leeds','Glasgow','Edinburgh','Bristol','Liverpool','Oxford','Cambridge']},
+  {g:'🇦🇪 UAE & Saudi Arabia',items:['Dubai','Abu Dhabi','Sharjah','Riyadh','Jeddah','Mecca','Dammam']},
+  {g:'🌍 Middle East',items:['Doha, Qatar','Kuwait City','Muscat, Oman','Cairo, Egypt','Istanbul, Turkey','Tel Aviv, Israel']},
+  {g:'🇸🇬 Southeast Asia',items:['Singapore','Kuala Lumpur, Malaysia','Bangkok, Thailand','Jakarta, Indonesia','Manila, Philippines','Ho Chi Minh City, Vietnam','Dhaka, Bangladesh','Colombo, Sri Lanka']},
+  {g:'🇯🇵 Japan & Korea',items:['Tokyo','Osaka','Kyoto','Seoul, South Korea','Taipei, Taiwan','Hong Kong']},
+  {g:'🇦🇺 Australia & NZ',items:['Sydney','Melbourne','Brisbane','Perth','Adelaide','Auckland','Wellington']},
+  {g:'🇨🇦 Canada',items:['Toronto','Vancouver','Montreal','Calgary','Edmonton','Ottawa']},
+  {g:'🇩🇪 Germany & DACH',items:['Berlin','Munich','Hamburg','Frankfurt','Cologne','Zurich, Switzerland','Vienna, Austria']},
+  {g:'🇫🇷 France & Iberia',items:['Paris','Lyon','Marseille','Madrid, Spain','Barcelona, Spain','Lisbon, Portugal']},
+  {g:'🇮🇹 Italy & Southern Europe',items:['Rome','Milan','Naples','Turin','Florence','Athens, Greece']},
+  {g:'🇸🇪 Nordics',items:['Stockholm, Sweden','Oslo, Norway','Copenhagen, Denmark','Helsinki, Finland']},
+  {g:'🌍 Africa',items:['Lagos, Nigeria','Nairobi, Kenya','Johannesburg, South Africa','Cape Town, South Africa','Cairo, Egypt','Accra, Ghana']},
+  {g:'🌎 Latin America',items:['São Paulo, Brazil','Mexico City, Mexico','Buenos Aires, Argentina','Santiago, Chile','Bogotá, Colombia']},
+  {g:'🌐 Countries',items:['United States','United Kingdom','India','Canada','Australia','Germany','France','Japan','China','Brazil','South Africa','Nigeria','Saudi Arabia','UAE','Singapore','Malaysia','Indonesia','Thailand','Philippines','Pakistan','Bangladesh']},
+];
+
+// ── TAGS ─────────────────────────────────────────
+let tags=['owner','founder','ceo','director'];
+function rebuildTags(){
+  const wrap=document.getElementById('tagsWrap'),inp=document.getElementById('tagInput');
+  wrap.innerHTML='';
+  tags.forEach(t=>{
+    const sp=document.createElement('span');sp.className='tag';sp.dataset.v=t;
+    sp.innerHTML=`${t.charAt(0).toUpperCase()+t.slice(1)}<span class="tag-x">×</span>`;
+    sp.querySelector('.tag-x').onclick=()=>{tags=tags.filter(x=>x!==t);rebuildTags()};
+    wrap.appendChild(sp);
+  });
+  wrap.appendChild(inp);
+}
+rebuildTags();
+document.getElementById('tagsWrap').addEventListener('click',()=>document.getElementById('tagInput').focus());
+document.getElementById('tagInput').addEventListener('keydown',e=>{
+  if(e.key==='Enter'||e.key===','){
+    e.preventDefault();
+    const v=e.target.value.trim().toLowerCase().replace(',','');
+    if(v&&!tags.includes(v)){tags.push(v);rebuildTags()}
+    e.target.value='';
+  }
+});
+
+// ── TOGGLE ───────────────────────────────────────
+let bdOn=true;
+document.getElementById('bdTog').addEventListener('click',function(){bdOn=!bdOn;this.classList.toggle('on',bdOn)});
+
+// ── DROPDOWN BUILDER ─────────────────────────────
+function buildDropdown(containerId,data,onSelect,isLocation){
+  const el=document.getElementById(containerId);el.innerHTML='';
+  data.forEach(group=>{
+    const lbl=document.createElement('div');lbl.className='dl-group-label';lbl.textContent=group.g;el.appendChild(lbl);
+    (group.items||[]).forEach(item=>{
+      const opt=document.createElement('div');opt.className='dl-option';
+      if(isLocation){opt.dataset.value=item;opt.innerHTML=`<span class="dl-icon">📍</span>${item}`}
+      else{opt.dataset.value=item.l;opt.innerHTML=`<span class="dl-icon">${item.i}</span>${item.l}`}
+      opt.addEventListener('click',()=>onSelect(opt.dataset.value,item));
+      el.appendChild(opt);
+    });
+  });
+}
+function filterDL(q,containerId){
+  q=q.toLowerCase();
+  document.querySelectorAll(`#${containerId} .dl-option`).forEach(o=>{o.style.display=o.dataset.value.toLowerCase().includes(q)?'flex':'none'});
+  document.querySelectorAll(`#${containerId} .dl-group-label`).forEach(l=>{
+    let el=l.nextElementSibling,any=false;
+    while(el&&!el.classList.contains('dl-group-label')){if(el.style.display!=='none')any=true;el=el.nextElementSibling}
+    l.style.display=any?'block':'none';
+  });
+}
+function openDL(listId,inputId){document.getElementById(listId).classList.add('open');document.getElementById(inputId)?.classList?.add('open')}
+function closeDL(listId,inputId){document.getElementById(listId).classList.remove('open');document.getElementById(inputId)?.classList?.remove('open')}
+
+// Category — free type, arrow toggles dropdown
+buildDropdown('catOptions',CATS,(val,item)=>{
+  document.getElementById('keyword').value=val;
+  document.getElementById('catDisplay').value=(item.i?item.i+' ':'')+val;
+  closeDL('catList','catDisplay');
+},false);
+document.getElementById('catDisplay').addEventListener('input',e=>{
+  document.getElementById('keyword').value=e.target.value;
+  if(document.getElementById('catList').classList.contains('open'))filterDL(e.target.value,'catOptions');
+});
+document.getElementById('catSearch').addEventListener('input',e=>filterDL(e.target.value,'catOptions'));
+function toggleCatDrop(){
+  const open=document.getElementById('catList').classList.contains('open');
+  if(open)closeDL('catList');else{openDL('catList');setTimeout(()=>document.getElementById('catSearch').focus(),60)}
+}
+
+// Location
+buildDropdown('locOptions',LOCS,(val)=>{
+  document.getElementById('location').value=val;
+  document.getElementById('locDisplay').value=val;
+  closeDL('locList');
+},true);
+document.getElementById('locDisplay').addEventListener('click',()=>{
+  const open=document.getElementById('locList').classList.contains('open');
+  if(open)closeDL('locList');else{openDL('locList');setTimeout(()=>document.getElementById('locSearch').focus(),60)}
+});
+document.getElementById('locSearch').addEventListener('input',e=>filterDL(e.target.value,'locOptions'));
+
+// Close on outside click
+document.addEventListener('click',e=>{
+  if(!document.getElementById('catWrap').contains(e.target))closeDL('catList');
+  if(!document.getElementById('locWrap').contains(e.target))closeDL('locList');
+});
+
+// ── PROGRESS ─────────────────────────────────────
+function setProgress(pct,label,si){
+  document.getElementById('progBar').style.width=pct+'%';
+  document.getElementById('progPct').textContent=pct+'%';
+  document.getElementById('progLabel').textContent=label;
+  ['s1','s2','s3','s4','s5','s6'].forEach((id,i)=>{
+    const el=document.getElementById(id);el.className='step';
+    if(i<si)el.classList.add('done');else if(i===si)el.classList.add('active');
+  });
+}
+
+// ── AGENT WEBHOOK ─────────────────────────────────
+const N8N='https://n8n.srv985981.hstgr.cloud/webhook/prospectpulse-scan';
+const SHEET_URL='https://docs.google.com/spreadsheets/d/1qvPJbSt5c1C3aVBo3_Y_Hu_jP-X383wf1evfpED0Jnc/edit#gid=647354828';
+
+// ── SCAN ─────────────────────────────────────────
+document.getElementById('scanBtn').addEventListener('click',async()=>{
+  const keyword=document.getElementById('keyword').value.trim()||document.getElementById('catDisplay').value.trim();
+  const location=document.getElementById('location').value.trim()||document.getElementById('locDisplay').value.trim();
+  const maxResults=parseInt(document.getElementById('maxResults').value);
+  const companySize=document.getElementById('companySize').value;
+
+  if(!keyword){
+    showErr('⚠ Please enter or select a Business Category.');return;
+  }
+  if(!location){
+    showErr('⚠ Please select a Location.');return;
+  }
+
+  hideErr();
+  document.getElementById('resultSection').classList.remove('show');
+
+  document.getElementById('progWrap').classList.add('show');
+  document.getElementById('scanBtn').disabled=true;
+
+  const steps=[
+    [12,'Connecting to ProspectPulse V2…',0],
+    [28,'Scraping Google Maps listings…',1],
+    [46,'Discovering owners & founders…',2],
+    [62,'Matching LinkedIn profiles…',3],
+    [76,'Scanning BD contacts…',4],
+    [90,'Enriching & saving to sheet…',5],
+  ];
+  let si=0;
+  const prog=setInterval(()=>{if(si<steps.length){setProgress(...steps[si]);si++;}},2200);
+  const t0=Date.now();
+
+  try{
+    const res=await fetch(N8N,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({keyword,location,maxResults,targetTitles:tags,companySize,includeBizDev:bdOn})
+    });
+    clearInterval(prog);
+
+    if(!res.ok) throw new Error(`Agent returned error ${res.status}. Check ProspectPulse V2 is active in n8n.`);
+
+    const data=await res.json().catch(()=>({}));
+    const elapsed=Math.round((Date.now()-t0)/1000);
+    const dateStr=new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
+
+    setProgress(100,'Scan complete — leads saved to sheet ✓',6);
+    setTimeout(()=>{
+      document.getElementById('progWrap').classList.remove('show');
+      renderSuccess({keyword,location,elapsed,dateStr});
+    },900);
+
+  }catch(err){
+    clearInterval(prog);
+    document.getElementById('progWrap').classList.remove('show');
+    showErr('⚠ '+(err.message||'Connection failed. Make sure ProspectPulse V2 is imported and active in n8n.'));
+    document.getElementById('scanBtn').disabled=false;
+  }
+});
+
+function showErr(msg){const e=document.getElementById('errBox');e.textContent=msg;e.classList.add('show')}
+function hideErr(){document.getElementById('errBox').classList.remove('show')}
+
+// ── SUCCESS RENDER ────────────────────────────────
+function renderSuccess({keyword,location,elapsed,dateStr}){
+  // Success card
+  document.getElementById('resultInner').innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;margin-bottom:28px;padding-bottom:24px;border-bottom:1px solid var(--brd)">
+      <div>
+        <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:700;color:var(--text);margin-bottom:6px">✅ Scan Complete</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:.05em">"${keyword}" &nbsp;·&nbsp; ${location} &nbsp;·&nbsp; ${dateStr} &nbsp;·&nbsp; ${elapsed}s</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 18px;background:rgba(90,158,47,.1);border:1px solid rgba(90,158,47,.3);border-radius:100px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#5A9E2F;letter-spacing:.08em;white-space:nowrap">
+        <span style="width:6px;height:6px;background:#5A9E2F;border-radius:50%;box-shadow:0 0 8px #5A9E2F;display:inline-block"></span>SUCCESS
+      </div>
+    </div>
+
+    <div style="background:rgba(255,255,255,.02);border:1px solid var(--brd);border-radius:var(--rs);padding:20px 24px;margin-bottom:28px;line-height:1.85;font-size:13px;color:var(--muted)">
+      Your leads have been enriched — company info, owner names, LinkedIn profiles & BD contacts — and saved directly to your Google Sheet. Open the sheet to view, filter, sort, and export your full results.
+    </div>
+
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+      <a href="${SHEET_URL}" target="_blank" style="display:inline-flex;align-items:center;gap:10px;padding:14px 28px;background:linear-gradient(135deg,#5A9E2F,#3d7020);border:none;border-radius:100px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#fff;text-decoration:none;cursor:pointer;box-shadow:0 8px 24px rgba(90,158,47,.35);transition:all .2s;font-weight:600" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 12px 32px rgba(90,158,47,.5)'" onmouseout="this.style.transform='';this.style.boxShadow='0 8px 24px rgba(90,158,47,.35)'">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        View Results in Google Sheet
+      </a>
+      <button onclick="resetApp()" style="padding:14px 28px;background:transparent;border:1px solid var(--brd2);border-radius:100px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);cursor:pointer;transition:all .2s;outline:none" onmouseover="this.style.borderColor='#F0A500';this.style.color='#F0A500'" onmouseout="this.style.borderColor='';this.style.color=''">
+        ← New Scan
+      </button>
+    </div>`;
+
+  document.getElementById('resultSection').classList.add('show');
+  document.getElementById('scanBtn').disabled=false;
+  document.getElementById('scanBtn').textContent='Launch Intelligence Scan ⚡';
+}
+
+function resetApp(){
+  document.getElementById('resultSection').classList.remove('show');
+  document.getElementById('catDisplay').value='';
+  document.getElementById('keyword').value='';
+  document.getElementById('locDisplay').value='';
+  document.getElementById('location').value='';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+</script>
+</body>
+</html>
